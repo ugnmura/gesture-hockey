@@ -39,7 +39,7 @@ export type HandCenter = {
 };
 
 export const getHandCentersOnce = async (): Promise<HandCenter[]> => {
-  if (!recognizer || !video) return [];
+  if (!recognizer || !video || video.readyState !== 4) return [];
 
   const now = performance.now();
   const res = recognizer.recognizeForVideo(video, now);
