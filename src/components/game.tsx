@@ -12,9 +12,12 @@ import Matter, { Engine, World, Bodies, Body } from "matter-js";
 
 extend({ Container, Graphics, Text });
 
-const WIDTH = 640;
-const HEIGHT = 480;
+const WIDTH = 640 * 2;
+const HEIGHT = 480 * 2;
 const WIN_SCORE = 10;
+const PADDLE_SIZE = 50;
+const PUCK_SIZE = 22;
+const SPEED_CAP = 15;
 
 type GRef = React.RefObject<any>;
 
@@ -56,9 +59,9 @@ const Game: React.FC = () => {
   const leftScoreTextRef = useRef<any>(null);
   const rightScoreTextRef = useRef<any>(null);
 
-  const drawPuck = useCallback(makeCircleDraw(0xffff00, 14), []);
-  const drawPaddleBlue = useCallback(makeCircleDraw(0xff4444, 22), []);
-  const drawPaddleGray = useCallback(makeCircleDraw(0x44aaff, 22), []);
+  const drawPuck = useCallback(makeCircleDraw(0xffff00, PUCK_SIZE), []);
+  const drawPaddleBlue = useCallback(makeCircleDraw(0xff4444, PADDLE_SIZE), []);
+  const drawPaddleGray = useCallback(makeCircleDraw(0x44aaff, PADDLE_SIZE), []);
 
   const winnerRef = useRef<"left" | "right" | null>(null);
   const winBannerRef = useRef<any>(null);
@@ -124,7 +127,7 @@ const Game: React.FC = () => {
       Bodies.rectangle(WIDTH + 5, HEIGHT / 2, 10, HEIGHT, wallOpts),
     ];
 
-    const puck = Bodies.circle(WIDTH / 2, HEIGHT / 2, 14, {
+    const puck = Bodies.circle(WIDTH / 2, HEIGHT / 2, PUCK_SIZE, {
       label: "puck",
       restitution: 0.98,
       friction: 0,
@@ -132,13 +135,13 @@ const Game: React.FC = () => {
       density: 0.0015,
     });
 
-    const p1 = Bodies.circle(WIDTH * 0.25, HEIGHT / 2, 22, {
+    const p1 = Bodies.circle(WIDTH * 0.25, HEIGHT / 2, PADDLE_SIZE, {
       label: "paddle-1",
       inertia: Infinity,
       frictionAir: 0.15,
       restitution: 0.5,
     });
-    const p2 = Bodies.circle(WIDTH * 0.75, HEIGHT / 2, 22, {
+    const p2 = Bodies.circle(WIDTH * 0.75, HEIGHT / 2, PADDLE_SIZE, {
       label: "paddle-2",
       inertia: Infinity,
       frictionAir: 0.15,
@@ -298,6 +301,8 @@ const Game: React.FC = () => {
     <div className="grid gap-2">
       <video
         className="scale-x-[-1] absolute opacity-35"
+        width={WIDTH}
+        height={HEIGHT}
         ref={videoRef}
         autoPlay
         muted
@@ -343,7 +348,7 @@ const Game: React.FC = () => {
             anchor={{ x: 0.5, y: 0.5 }}
             style={{
               fill: 0x888888,
-              fontSize: 128,
+              fontSize: 256,
               fontFamily: "Press Start 2P",
               fontWeight: "700",
               letterSpacing: 1,
@@ -358,7 +363,7 @@ const Game: React.FC = () => {
             anchor={{ x: 0.5, y: 0.5 }}
             style={{
               fill: 0x888888,
-              fontSize: 128,
+              fontSize: 256,
               fontFamily: "Press Start 2P",
               fontWeight: "700",
               letterSpacing: 1,
@@ -374,7 +379,7 @@ const Game: React.FC = () => {
             zIndex={9999}
             visible={false}
             style={{
-              fontSize: 48,
+              fontSize: 96,
               fontFamily: "Press Start 2P",
               fontWeight: "700",
               letterSpacing: 2,
@@ -427,7 +432,7 @@ const capVector = (vx: number, vy: number, max: number) => {
 const steerBodyToward = (body: Matter.Body, x: number, y: number) => {
   const vx = x - body.position.x;
   const vy = y - body.position.y;
-  const velocity: Matter.Vector = capVector(vx, vy, 10);
+  const velocity: Matter.Vector = capVector(vx, vy, SPEED_CAP);
   Body.setVelocity(body, velocity);
 };
 
