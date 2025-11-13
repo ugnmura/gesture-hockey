@@ -7,6 +7,7 @@ import {
   ensureRecognizer,
   ReadyStateVideo,
 } from "@/utils/mediapipe";
+import { getURL } from "@/utils/api";
 
 import Matter, { Engine, World, Bodies, Body } from "matter-js";
 
@@ -119,21 +120,21 @@ const Game: React.FC = () => {
     const ctx = new AudioContext();
     audioCtxRef.current = ctx;
 
-    fetch("/hit.wav")
+    fetch(getURL("/hit.wav"))
       .then((res) => res.arrayBuffer())
       .then((buf) => ctx.decodeAudioData(buf))
       .then((decoded) => {
         hitBufferRef.current = decoded;
       });
 
-    fetch("/goal.wav")
+    fetch(getURL("/goal.wav"))
       .then((res) => res.arrayBuffer())
       .then((buf) => ctx.decodeAudioData(buf))
       .then((decoded) => {
         goalBufferRef.current = decoded;
       });
 
-    fetch("/win.wav")
+    fetch(getURL("/win.wav"))
       .then((res) => res.arrayBuffer())
       .then((buf) => ctx.decodeAudioData(buf))
       .then((decoded) => {
