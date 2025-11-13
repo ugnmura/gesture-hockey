@@ -110,6 +110,72 @@ const Game: React.FC = () => {
     }, 500);
   };
 
+  const audioCtxRef = useRef<AudioContext | null>(null);
+  const hitBufferRef = useRef<AudioBuffer | null>(null);
+  const goalBufferRef = useRef<AudioBuffer | null>(null);
+  const winBufferRef = useRef<AudioBuffer | null>(null);
+
+  useEffect(() => {
+    const ctx = new AudioContext();
+    audioCtxRef.current = ctx;
+
+    fetch("/hit.wav")
+      .then((res) => res.arrayBuffer())
+      .then((buf) => ctx.decodeAudioData(buf))
+      .then((decoded) => {
+        hitBufferRef.current = decoded;
+      });
+
+    fetch("/goal.wav")
+      .then((res) => res.arrayBuffer())
+      .then((buf) => ctx.decodeAudioData(buf))
+      .then((decoded) => {
+        goalBufferRef.current = decoded;
+      });
+
+    fetch("/win.wav")
+      .then((res) => res.arrayBuffer())
+      .then((buf) => ctx.decodeAudioData(buf))
+      .then((decoded) => {
+        winBufferRef.current = decoded;
+      });
+  }, []);
+
+  const playHitSound = (pitch = 1) => {
+    const ctx = audioCtxRef.current;
+    const buffer = hitBufferRef.current;
+    if (!ctx || !buffer) return;
+
+    const source = ctx.createBufferSource();
+    source.buffer = buffer;
+    source.playbackRate.value = pitch;
+
+    source.connect(ctx.destination);
+    source.start(0);
+  };
+
+  const playGoalSound = () => {
+    const ctx = audioCtxRef.current;
+    const buffer = goalBufferRef.current;
+    if (!ctx || !buffer) return;
+
+    const source = ctx.createBufferSource();
+    source.buffer = buffer;
+    source.connect(ctx.destination);
+    source.start(0);
+  };
+
+  const playWinSound = () => {
+    const ctx = audioCtxRef.current;
+    const buffer = winBufferRef.current;
+    if (!ctx || !buffer) return;
+
+    const source = ctx.createBufferSource();
+    source.buffer = buffer;
+    source.connect(ctx.destination);
+    source.start(0);
+  };
+
   useEffect(() => {
     const engine = Engine.create({ enableSleeping: false });
     engine.gravity.y = 0;
@@ -181,16 +247,23 @@ const Game: React.FC = () => {
         const hasPuck = a.label === "puck" || b.label === "puck";
         if (!hasPuck) continue;
 
+        const speed = Math.hypot(puck.velocity.x, puck.velocity.y);
+        const pitch = 1 + speed / 25;
+        playHitSound(pitch);
+
         const other = a.label === "puck" ? b : a;
 
         if (other.label === "goal-left") {
           scoreRef.current.right += 1;
           if (rightScoreTextRef.current)
             rightScoreTextRef.current.text = scoreRef.current.right.toString();
-          handleRespawn(puck, puckG, "left");
           if (scoreRef.current.right >= WIN_SCORE) {
+            playWinSound();
             handleWin("right");
             break;
+          } else {
+            handleRespawn(puck, puckG, "left");
+            playGoalSound();
           }
           break;
         }
@@ -199,10 +272,13 @@ const Game: React.FC = () => {
           if (leftScoreTextRef.current)
             leftScoreTextRef.current.text = scoreRef.current.left.toString();
           if (scoreRef.current.left >= WIN_SCORE) {
+            playWinSound();
             handleWin("left");
             break;
+          } else {
+            handleRespawn(puck, puckG, "left");
+            playGoalSound();
           }
-          handleRespawn(puck, puckG, "right");
           break;
         }
       }
@@ -239,7 +315,7 @@ const Game: React.FC = () => {
         let centers = [] as { x: number; y: number }[];
         try {
           centers = await getHandCentersOnce();
-        } catch {}
+        } catch { }
 
         const [h1, h2] = centers;
         let left;
