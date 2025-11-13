@@ -277,7 +277,7 @@ const Game: React.FC = () => {
             handleWin("left");
             break;
           } else {
-            handleRespawn(puck, puckG, "left");
+            handleRespawn(puck, puckG, "right");
             playGoalSound();
           }
           break;
